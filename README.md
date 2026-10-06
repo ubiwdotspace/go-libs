@@ -1,7 +1,7 @@
 # go-libs
 
 Shared Go libraries for ubiwdotspace services. Go 1.25 or newer is required.
-The module is `github.com/ubiwdotspace/go-libs`; the current release is `v0.1.1`.
+The module is `github.com/ubiwdotspace/go-libs`; the current release is `v0.1.2`.
 
 ## Install
 
@@ -9,7 +9,7 @@ This module is public. Developers, CI, and Docker builds can download it without
 GitHub credentials, SSH forwarding, or `GOPRIVATE` configuration:
 
 ```sh
-go get github.com/ubiwdotspace/go-libs@v0.1.1
+go get github.com/ubiwdotspace/go-libs@v0.1.2
 ```
 
 Use `@latest` to update to the highest compatible release under Go module version
@@ -19,7 +19,7 @@ Breaking changes after v1 require a new major module path. Do not move release t
 
 ## Logging
 
-The core `logging` package uses only the Go standard library. Gin and gRPC adapters
+The core `logging` package uses only the Go standard library. Gin, gRPC, and GORM adapters
 are separate packages; importing only `logging` does not compile those frameworks
 into your binary. They still share one module dependency manifest and release.
 
@@ -104,6 +104,24 @@ the returned error. No protobuf payload or metadata dump is recorded. Internal,
 Unknown, Unavailable, and DataLoss use ERROR; other failures use WARN; success uses
 INFO (successful standard health calls use DEBUG). Panics become a generic Internal
 error and a separate safe stack log. Other returned errors are preserved.
+
+### GORM
+
+```go
+import "github.com/ubiwdotspace/go-libs/logging/gormlog"
+
+db, err := gorm.Open(dialector, &gorm.Config{
+    Logger: gormlog.New(logger),
+})
+```
+
+The adapter uses the request logger from context when available, or the injected
+logger otherwise. A nil logger falls back to `slog.Default()`. It never renders SQL
+or query parameters. Query errors log at ERROR, retaining only SQLSTATE for errors
+that expose it; record-not-found is not logged as an error. Queries taking at least
+200 ms log at WARN. Default GORM verbosity is WARN; use `LogMode` to change it.
+Successful query logs require both GORM INFO verbosity and slog DEBUG level.
+`LogMode` returns a copy and does not change the original adapter.
 
 ### Manual logging and request IDs
 
