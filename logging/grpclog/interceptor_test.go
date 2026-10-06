@@ -73,6 +73,9 @@ func TestRequestIDContextResponseAndAuthenticationFailure(t *testing.T) {
 			t.Fatalf("missing response ID: %v", stream.headers)
 		}
 		records := jsonRecords(t, output.String())
+		if _, exists := records[len(records)-1]["msg"]; exists {
+			t.Fatal("access log must not include a redundant completion message")
+		}
 		if len(records) != 2 || records[0]["request_id"] != id || records[1]["request_id"] != id || records[1]["grpc_code"] != "Unauthenticated" {
 			t.Fatalf("missing correlated logs: %v", records)
 		}

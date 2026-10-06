@@ -76,3 +76,29 @@ func TestLoggerCopiesConfiguredSecrets(t *testing.T) {
 		t.Fatal("caller mutation disabled redaction")
 	}
 }
+
+func TestCollectorLogsOmitTimeEmptyMessageAndUnsetMetadata(t *testing.T) {
+	for _, format := range []string{"json", "text"} {
+		t.Run(format, func(t *testing.T) {
+			var output bytes.Buffer
+			logger, err := New(Config{Format: format, Output: &output, OmitTime: true, Service: "auth"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			logger.Warn("", "status", 400, "error", "client credential is required")
+			for _, field := range []string{"time", "msg", "version", "environment"} {
+				if strings.Contains(output.String(), `"`+field+`":`) || strings.Contains(output.String(), field+"=") {
+					t.Fatalf("unexpected field %q: %s", field, output.String())
+				}
+			}
+			if !strings.Contains(output.String(), "WARN") || !strings.Contains(output.String(), "client credential is required") {
+				t.Fatalf("lost severity or error: %s", output.String())
+			}
+			output.Reset()
+			logger.Info("Token issued")
+			if !strings.Contains(output.String(), "Token issued") {
+				t.Fatal("manual log message was removed")
+			}
+		})
+	}
+}

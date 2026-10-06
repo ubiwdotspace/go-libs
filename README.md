@@ -1,7 +1,7 @@
 # go-libs
 
 Shared Go libraries for ubiwdotspace services. Go 1.25 or newer is required.
-The module is `github.com/ubiwdotspace/go-libs`; the current release is `v0.1.2`.
+The module is `github.com/ubiwdotspace/go-libs`; the current release is `v0.1.3`.
 
 ## Install
 
@@ -9,7 +9,7 @@ This module is public. Developers, CI, and Docker builds can download it without
 GitHub credentials, SSH forwarding, or `GOPRIVATE` configuration:
 
 ```sh
-go get github.com/ubiwdotspace/go-libs@v0.1.2
+go get github.com/ubiwdotspace/go-libs@v0.1.3
 ```
 
 Use `@latest` to update to the highest compatible release under Go module version
@@ -43,6 +43,9 @@ slog.SetDefault(logger) // Optional: fallback for logs outside request contexts.
 ```
 
 Zero values use INFO, JSON, and stdout. `Output` accepts a caller-owned `io.Writer`.
+Set `OmitTime: true` when Docker/Dozzle already supplies the timestamp. Leave
+`Version` empty to omit the app version; empty service/environment fields are also
+omitted. Empty messages are omitted, while manual messages and error details remain.
 Invalid levels or formats return an error. There is no background worker, file
 rotation, environment loading, or global logger mutation inside `New`.
 
@@ -73,7 +76,8 @@ router.Use(ginlog.New(logger), ginlog.Recovery())
 ```
 
 Access logs include `request_id`, `transport`, HTTP method, route template, status,
-and `duration_ms`. Unknown paths log as `<unmatched>`. No body, headers, raw path,
+and `duration_ms`, without a generic completion message when using `logging.New`.
+Unknown paths log as `<unmatched>`. No body, headers, raw path,
 query, or client IP is recorded. Handler errors attached with `c.Error(err)` are
 included in the completion log. 4xx uses WARN; 5xx uses ERROR; other responses use
 INFO. Successful `/healthz` and `/api/v1/healthz` probes use DEBUG.
@@ -100,7 +104,8 @@ are not included. Use `ChainUnaryInterceptor` for additional interceptors so the
 logging interceptor remains outermost and records authentication rejections.
 
 Logs contain `request_id`, `transport`, full method, `grpc_code`, `duration_ms`, and
-the returned error. No protobuf payload or metadata dump is recorded. Internal,
+the returned error, without a generic completion message when using `logging.New`.
+No protobuf payload or metadata dump is recorded. Internal,
 Unknown, Unavailable, and DataLoss use ERROR; other failures use WARN; success uses
 INFO (successful standard health calls use DEBUG). Panics become a generic Internal
 error and a separate safe stack log. Other returned errors are preserved.

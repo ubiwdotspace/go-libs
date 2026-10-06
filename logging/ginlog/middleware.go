@@ -39,7 +39,7 @@ func New(logger *slog.Logger) gin.HandlerFunc {
 		if (route == "/healthz" || route == "/api/v1/healthz") && status < 400 {
 			level = slog.LevelDebug
 		}
-		requestLogger.LogAttrs(c.Request.Context(), level, "HTTP request completed", attrs...)
+		requestLogger.LogAttrs(c.Request.Context(), level, "", attrs...)
 	}
 }
 

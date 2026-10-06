@@ -67,7 +67,7 @@ func TestRESTRequestLoggingPreservesBodyAndRedactsSecrets(t *testing.T) {
 	for _, statusCode := range []int{200, 401, 502} {
 		t.Run(fmt.Sprint(statusCode), func(t *testing.T) {
 			var buffer bytes.Buffer
-			logger, err := logging.New(logging.Config{Output: &buffer})
+			logger, err := logging.New(logging.Config{Output: &buffer, OmitTime: true})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -101,6 +101,11 @@ func TestRESTRequestLoggingPreservesBodyAndRedactsSecrets(t *testing.T) {
 				t.Fatalf("expected one access log: %v", records)
 			}
 			record := records[0]
+			for _, key := range []string{"time", "msg", "version"} {
+				if _, exists := record[key]; exists {
+					t.Fatalf("redundant access log field %q: %v", key, record)
+				}
+			}
 			if record["request_id"] != id || record["route"] != "/api/v1/login" || record["status"] != float64(statusCode) || record["level"] != map[int]string{200: "INFO", 401: "WARN", 502: "ERROR"}[statusCode] {
 				t.Fatalf("wrong log: %v", record)
 			}

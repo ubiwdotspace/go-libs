@@ -58,7 +58,7 @@ func New(logger *slog.Logger) grpc.UnaryServerInterceptor {
 			if err != nil {
 				attrs = append(attrs, slog.Any("error", err))
 			}
-			requestLogger.LogAttrs(ctx, level, "gRPC request completed", attrs...)
+			requestLogger.LogAttrs(ctx, level, "", attrs...)
 		}()
 		return handler(ctx, req)
 	}
