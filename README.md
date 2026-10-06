@@ -1,7 +1,7 @@
 # go-libs
 
 Shared Go libraries for ubiwdotspace services. Go 1.25 or newer is required.
-The module is `github.com/ubiwdotspace/go-libs`; the first release is `v0.1.0`.
+The module is `github.com/ubiwdotspace/go-libs`; the current release is `v0.1.1`.
 
 ## Install
 
@@ -9,7 +9,7 @@ This module is public. Developers, CI, and Docker builds can download it without
 GitHub credentials, SSH forwarding, or `GOPRIVATE` configuration:
 
 ```sh
-go get github.com/ubiwdotspace/go-libs@v0.1.0
+go get github.com/ubiwdotspace/go-libs@v0.1.1
 ```
 
 Use `@latest` to update to the highest compatible release under Go module version
@@ -45,6 +45,22 @@ slog.SetDefault(logger) // Optional: fallback for logs outside request contexts.
 Zero values use INFO, JSON, and stdout. `Output` accepts a caller-owned `io.Writer`.
 Invalid levels or formats return an error. There is no background worker, file
 rotation, environment loading, or global logger mutation inside `New`.
+
+### Startup banner
+
+Print the UBIW shadow-style banner once from each application's entry point:
+
+```go
+if err := logging.PrintBanner(os.Stderr); err != nil {
+    logger.Warn("startup banner could not be written", "error", err)
+}
+```
+
+`PrintBanner(io.Writer)` writes plain text without ANSI color codes and returns
+any write error. Using stderr keeps stdout available for structured logs; Docker's
+combined logs show both streams. The banner is independent of log level and marks
+startup, not readiness. `logging.New` does not print it automatically, so libraries
+and tests that create additional loggers do not emit duplicate banners.
 
 ### Gin
 
